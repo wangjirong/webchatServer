@@ -1,0 +1,33 @@
+<html>
+<head></head>
+<body>
+<div>
+    <input type="text" id="nickName">
+    <button id="login">登录</button>
+    <input type="text" id="message">
+    <button id="send">发送</button>
+    <ul id="msgs"></ul>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        let nickName;
+        document.getElementById('login').onclick = function () {
+            let user = document.getElementById('nickName');
+            nickName = user.value;
+            socket.emit('login', nickName);
+        };
+        document.getElementById('send').onclick = function () {
+            let message = document.getElementById('message');
+            console.log(message.value)
+            socket.emit('sendMsg', message.value);
+            socket.on('getMessage', msg => {
+                let li = document.createElement('li');
+                li.innerHTML = new Date() + ":" + nickName + "说：" + msg;
+                document.getElementById('msgs').appendChild(li);
+            })
+        }
+
+    </script>
+</div>
+</body>
+</html>
