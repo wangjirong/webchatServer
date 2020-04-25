@@ -19,8 +19,8 @@ router.post('/login', async (req, res, next) => {
             const token = "Bearer" + getEleToken(user);
             res.status(200).send(token);
         } else
-            res.status(403).send("密码错误");
-    } else res.status(404).send("该账户不存在")
+            res.status(211).send("密码错误");
+    } else res.status(222).send("该账户不存在")
 });
 //注册
 router.post('/register', async (req, res, next) => {
@@ -33,8 +33,21 @@ router.post('/register', async (req, res, next) => {
                 password: hash
             }).save();
             if (user) res.status(200).send("注册成功");
-            else res.status(500).send("注册失败")
+            else res.status(211).send("注册失败")
         })
     })
 });
+
+//根据账号查找用户
+router.get('/searchPerson', async (req, res, next) => {
+    const nickName = req.query.nickName;
+    const user = await User.findOne({nickName});
+    if (user) res.status(200).send({
+        _id: user._id,
+        userName: user.userName,
+        nickName: user.nickName,
+        avatar: user.avatar
+    });
+    else res.status(211).send("没有找到！");
+})
 module.exports = router;
