@@ -1,15 +1,23 @@
 const mongoose = require('mongoose');
 module.exports = Message = mongoose.model("Message", mongoose.Schema({
-    userID: {
+    user_id: {
         type: String,
         required: true
     },
-    message:{
-        type:String,
+    avatar: {
+        type: String,
         required: true
     },
-    time:{
-        type:Date,
-        default:new Date(),
+    receiver: {
+        type: String,
+        required: true
+    },
+    message: {
+        type: String,
+        required: true
+    },
+    time: {
+        type: Date,
+        default: new Date(),
     }
-}))
+}));

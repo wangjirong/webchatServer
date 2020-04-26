@@ -25,8 +25,6 @@ const io = require('socket.io')(server);
 let client_List = []
 io.on('connection', function (socket) {
     //接收数据
-
-    socket.broadcast.emit('newConnection', "新加入人了");
     socket.on('userLogin', obj => {
         if (!client_List.some(r => r.user.nickName === obj.user.nickName))
             client_List.push({
@@ -37,29 +35,6 @@ io.on('connection', function (socket) {
         console.log(obj.user.userName + "上线");
         console.log(client_List.length, "台设备在线");
         /**
-         *  @param添加好友
-         * */
-        socket.on('addFriend', data => {
-            const {user, toUser} = data;
-            console.log("user:" + user.nickName, "\ntoUser:" + toUser.nickName);
-            const client = client_List.find(r => r.user.nickName === toUser.nickName);
-            socket.emit('reAddFriend', {user, code: 200});
-        })
-
-        /**
-         * @param聊天
-         */
-
-        socket.on('sendMessage', msg => {
-            const client = client_List.find(r => r.user.nickName === msg.receiver)
-            console.log(msg)
-            socket.broadcast.emit('getMessage', {
-                msg: msg.message,
-                sendUser: msg.sendUser
-            })
-        })
-
-        /**
          * @断开连接
          * */
         socket.on('disconnect', () => {
@@ -68,6 +43,30 @@ io.on('connection', function (socket) {
             // console.log(client_List)
         })
     });
+    /**
+     *  @param添加好友
+     * */
+    socket.on('addFriend', data => {
+        const {user, toUser} = data;
+        console.log("user:" + user.nickName, "\ntoUser:" + toUser.nickName);
+        const client = client_List.find(r => r.user.nickName === toUser.nickName);
+        if (client) {
+            console.log(client.user);
+            client.socket.emit('reAddFriend', {user, code: 200});
+        }
+    });
+    /**
+     * @param聊天
+     */
+    socket.on('sendMessage', msg => {
+        const client = client_List.find(r => r.user.nickName === msg.receiver.nickName)
+        console.log(msg)
+        if (client) {
+            console.log(msg)
+            client.socket.emit('getMessage', msg)
+        }
+    })
+
 });
 
 /**

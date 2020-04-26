@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../model/User');
+const {getUserByID, addUserToFriendList, getEleToken} = require('../utils/user');
 
 
 /* GET users listing. */
@@ -15,7 +16,6 @@ router.post('/login', async (req, res, next) => {
     if (user) {
         const isRight = await bcrypt.compareSync(req.body.password, user.password);
         if (isRight) {
-            const {getEleToken} = require('../utils/user')
             const token = "Bearer" + getEleToken(user);
             res.status(200).send(token);
         } else
@@ -49,5 +49,30 @@ router.get('/searchPerson', async (req, res, next) => {
         avatar: user.avatar
     });
     else res.status(211).send("没有找到！");
+});
+
+//添加好友
+router.post('/addFriend', async (req, res, next) => {
+    const {id, to_id} = req.body;
+    /**
+     *@将两个账号分别添加进对方的好友列表中
+     * */
+
+    const user = await getUserByID(id);
+    const toUser = await getUserByID(to_id);
+    const flag1 = await addUserToFriendList(id, toUser);
+    const flag2 = await addUserToFriendList(to_id, user);
+    if (flag1 && flag2)
+        res.status(200).send("success");
 })
+
+
+//获取好友列表
+router.get('/friendList', async (req, res, next) => {
+    const _id = req.query._id;
+    const user = await getUserByID(_id);
+    if (user) res.status(200).send(user.friendList);
+    else res.status(211).send([]);
+})
+
 module.exports = router;
