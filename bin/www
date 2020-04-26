@@ -58,13 +58,17 @@ io.on('connection', function (socket) {
     /**
      * @param聊天
      */
-    socket.on('sendMessage', msg => {
-        const client = client_List.find(r => r.user.nickName === msg.receiver.nickName)
-        console.log(msg)
-        if (client) {
-            console.log(msg)
-            client.socket.emit('getMessage', msg)
-        }
+    socket.on('sendMessage', async m => {
+        const client = client_List.find(r => r.user.nickName === m.receiver.nickName);
+        const {message, user, receiver} = m;
+        console.log(user, receiver, message);
+        //将聊天记录保存到数据库
+        const {addMessage} = require('../utils/message');
+        const res = await addMessage(user, receiver, message);
+        if (res) console.log("存储成功");
+        if (client)
+            client.socket.emit('getMessage', m);
+
     })
 
 });
