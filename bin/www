@@ -9,7 +9,7 @@ var debug = require('debug')('create:server');
 var http = require('http');
 
 /**
- * Get port from environment and store in Express.
+ * @Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
@@ -21,15 +21,52 @@ app.set('port', port);
  */
 var server = http.createServer(app);
 const io = require('socket.io')(server);
+
+let client_List = []
 io.on('connection', function (socket) {
     //接收数据
-    socket.on('login', function (obj) {
-        console.log(obj.username);
-        // 发送数据
-        socket.emit('relogin', {
-            msg: `你好${obj.username}`,
-            code: 200
-        });
+
+    socket.broadcast.emit('newConnection', "新加入人了");
+    socket.on('userLogin', obj => {
+        if (!client_List.some(r => r.user.nickName === obj.user.nickName))
+            client_List.push({
+                socket,
+                user: obj.user
+            });
+        socket.emit('reUserLogin', {id: socket.id, code: 200});
+        console.log(obj.user.userName + "上线");
+        console.log(client_List.length, "台设备在线");
+        /**
+         *  @param添加好友
+         * */
+        socket.on('addFriend', data => {
+            const {user, toUser} = data;
+            console.log("user:" + user.nickName, "\ntoUser:" + toUser.nickName);
+            const client = client_List.find(r => r.user.nickName === toUser.nickName);
+            socket.emit('reAddFriend', {user, code: 200});
+        })
+
+        /**
+         * @param聊天
+         */
+
+        socket.on('sendMessage', msg => {
+            const client = client_List.find(r => r.user.nickName === msg.receiver)
+            console.log(msg)
+            socket.broadcast.emit('getMessage', {
+                msg: msg.message,
+                sendUser: msg.sendUser
+            })
+        })
+
+        /**
+         * @断开连接
+         * */
+        socket.on('disconnect', () => {
+            console.log(obj.user.userName + "离线");
+            client_List = client_List.filter(r => r.user.nickName !== obj.user.nickName);
+            // console.log(client_List)
+        })
     });
 });
 
